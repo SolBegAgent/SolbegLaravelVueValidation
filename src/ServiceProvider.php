@@ -24,6 +24,7 @@ class ServiceProvider extends BaseServiceProvider
      */
     public function register()
     {
+        $this->registerHtmlBuilder();
         $this->registerFormBuilder();
     }
 
@@ -32,7 +33,7 @@ class ServiceProvider extends BaseServiceProvider
      */
     protected function registerFormBuilder()
     {
-        $this->app->bind(self::SERVICE_FORM, function ($app) {
+        $this->app->singleton(self::SERVICE_FORM, function ($app) {
             $form = new Form(
                 $app->make(self::SERVICE_HTML),
                 $app->make('url'),
@@ -40,6 +41,7 @@ class ServiceProvider extends BaseServiceProvider
                 $app['session.store']->getToken()
             );
             $form->setSessionStore($app['session.store']);
+            $form->setContainer($app);
             return $form;
         });
     }
@@ -49,7 +51,7 @@ class ServiceProvider extends BaseServiceProvider
      */
     protected function registerHtmlBuilder()
     {
-        $this->app->bind(self::SERVICE_HTML, function ($app) {
+        $this->app->singleton(self::SERVICE_HTML, function ($app) {
             return new HtmlBuilder($app->make('url'), $app->make('view'));
         });
     }

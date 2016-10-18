@@ -3,9 +3,12 @@
 namespace Solbeg\VueValidation;
 
 use Bootstrapper\Form as BaseForm;
-use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Routing\UrlGenerator;
+use Illuminate\Contracts\View\Factory;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 
 /**
  * Class Form
@@ -20,6 +23,11 @@ class Form extends BaseForm
      * @var FormRequest|null
      */
     private $request;
+
+    /**
+     * @var Container
+     */
+    private $container;
 
     /**
      * @inheritdoc
@@ -57,7 +65,7 @@ class Form extends BaseForm
     }
 
     /**
-     * @param FormRequest $request
+     * @param string|FormRequest $request
      * @param array $options
      * @return \Illuminate\Support\HtmlString
      */
@@ -68,7 +76,7 @@ class Form extends BaseForm
     }
 
     /**
-     * @param FormRequest $request
+     * @param string|FormRequest $request
      * @param array $options
      * @return string
      */
@@ -79,7 +87,7 @@ class Form extends BaseForm
     }
 
     /**
-     * @param FormRequest $request
+     * @param string|FormRequest $request
      * @param array $options
      * @return string
      */
@@ -91,7 +99,7 @@ class Form extends BaseForm
 
     /**
      * @param mixed $model
-     * @param FormRequest $request
+     * @param string|FormRequest $request
      * @param array $options
      * @return string
      */
@@ -103,7 +111,7 @@ class Form extends BaseForm
 
     /**
      * @param mixed $model
-     * @param FormRequest $request
+     * @param string|FormRequest $request
      * @param array $options
      * @return string
      */
@@ -111,6 +119,17 @@ class Form extends BaseForm
     {
         $this->setRequest($request);
         return $this->horizontalModel($model, $options);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function input($type, $name, $value = null, $options = [])
+    {
+        if ($this->getRequest() && !isset($options['v-validate'])) {
+            $options['v-validate'] = true;
+        }
+        return parent::input($type, $name, $value, $options);
     }
 
     /**
@@ -122,12 +141,78 @@ class Form extends BaseForm
     }
 
     /**
-     * @param FormRequest|null $request
+     * @param string|FormRequest|null $request
+     * @return static $this
+     * @throws \InvalidArgumentException
+     */
+    public function setRequest($request)
+    {
+        if ($request === null) {
+            $this->request = null;
+            return $this;
+        }
+
+        if (!is_a($request, FormRequest::class, true)) {
+            $requestClass = !is_object($request)
+                ? is_string($request) ? $request : gettype($request)
+                : get_class($request);
+            throw new \InvalidArgumentException("Invalid request class: '$requestClass', it must be an instance of " . FormRequest::class . '.');
+        } elseif (is_string($request)) {
+            $request = $this->createRequestFromBase($request);
+        }
+
+        $this->request = $request;
+        return $this;
+    }
+
+    /**
+     * @param string $requestClass
+     * @return FormRequest
+     */
+    protected function createRequestFromBase($requestClass)
+    {
+        $container = $this->getContainer();
+        $sourceRequest = $container['request'];
+
+        $result = $requestClass::createFromBase($sourceRequest);
+        $this->initializeRequest($result, $sourceRequest);
+
+        return $result;
+    }
+
+    /**
+     * @param FormRequest $request
+     * @param Request $sourceRequest
+     */
+    protected function initializeRequest($request, $sourceRequest)
+    {
+        if ($session = $sourceRequest->getSession()) {
+            $request->setSession($session);
+        }
+
+        $request->setUserResolver($sourceRequest->getUserResolver());
+        $request->setRouteResolver($sourceRequest->getRouteResolver());
+
+        $container = $this->getContainer();
+        $request->setContainer($container);
+        $request->setRedirector($container->make(Redirector::class));
+    }
+
+    /**
+     * @return Container
+     */
+    public function getContainer()
+    {
+        return $this->container;
+    }
+
+    /**
+     * @param Container $container
      * @return static $this
      */
-    public function setRequest(FormRequest $request = null)
+    public function setContainer(Container $container)
     {
-        $this->request = $request;
+        $this->container = $container;
         return $this;
     }
 }
