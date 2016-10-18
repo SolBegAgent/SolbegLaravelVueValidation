@@ -1,0 +1,20 @@
+{
+  "name": "solbeg/laravel-vue-validation",
+  "description": "Extends Bootstrapper package. It automatically converts Laravel's request rules into Vee's rules.",
+  "keywords": ["laravel", "file", "uploader", "file manager", "file uploading"],
+  "authors": [
+    {
+      "name": "Alexey Sejnov",
+      "email": "alexey.sejnov@solbeg.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=5.6.4",
+    "laravel/framework": "5.3.*",
+    "patricktalmadge/bootstrapper": "^5.9"
+  },
+  "autoload": {
+    "psr-4": { "Solbeg\\VueValidation\\": "src/" }
+  }
+}
