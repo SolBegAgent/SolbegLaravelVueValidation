@@ -12,7 +12,8 @@
   "require": {
     "php": ">=5.6.4",
     "laravel/framework": "5.3.*",
-    "patricktalmadge/bootstrapper": "^5.9"
+    "patricktalmadge/bootstrapper": "^5.9",
+    "symfony/http-foundation": "3.1.*"
   },
   "autoload": {
     "psr-4": { "Solbeg\\VueValidation\\": "src/" }

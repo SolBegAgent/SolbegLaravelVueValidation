@@ -13,6 +13,7 @@ class ServiceProvider extends BaseServiceProvider
 {
     const SERVICE_FORM = 'vue-validation::form';
     const SERVICE_HTML = 'vue-validation::html';
+    const SERVICE_CONVERTER = 'vue-validation::converter';
 
     /**
      * @inheritdoc
@@ -26,6 +27,7 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->registerHtmlBuilder();
         $this->registerFormBuilder();
+        $this->registerConverter();
     }
 
     /**
@@ -57,6 +59,15 @@ class ServiceProvider extends BaseServiceProvider
     }
 
     /**
+     * Registers converter factory.
+     */
+    protected function registerConverter()
+    {
+        $this->app->singleton(self::SERVICE_CONVERTER, Converter\Factory::class);
+        $this->app->alias(self::SERVICE_CONVERTER, Contracts\ConverterFactory::class);
+    }
+
+    /**
      * @inheritdoc
      */
     public function provides()
@@ -64,6 +75,9 @@ class ServiceProvider extends BaseServiceProvider
         return [
             self::SERVICE_FORM,
             self::SERVICE_HTML,
+            self::SERVICE_CONVERTER,
+            Converter\Factory::class,
+            Contracts\ConverterFactory::class,
         ];
     }
 }

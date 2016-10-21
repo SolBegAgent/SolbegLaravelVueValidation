@@ -3,12 +3,11 @@
 namespace Solbeg\VueValidation;
 
 use Bootstrapper\Form as BaseForm;
+
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Redirector;
 
 /**
  * Class Form
@@ -28,6 +27,11 @@ class Form extends BaseForm
      * @var Container
      */
     private $container;
+
+    /**
+     * @var RulesParser
+     */
+    private $rulesParser;
 
     /**
      * @inheritdoc
@@ -126,9 +130,17 @@ class Form extends BaseForm
      */
     public function input($type, $name, $value = null, $options = [])
     {
-        if ($this->getRequest() && !isset($options['v-validate'])) {
+        if ($this->getRequest()) {
+            if ($rules = $this->getRulesParser()->generateVueRules($name)) {
+                $options['data-rules'] = implode('|', $rules);
+            }
+        }
+
+        if (isset($options['data-rules']) && !isset($options['v-validate'])) {
             $options['v-validate'] = true;
         }
+
+
         return parent::input($type, $name, $value, $options);
     }
 
@@ -137,6 +149,10 @@ class Form extends BaseForm
      */
     public function getRequest()
     {
+        if (is_string($this->request)) {
+            $container = $this->getContainer();
+            $this->request = Wrappers\FormRequestWrapper::instantiateRequest($this->request, $container['request'], $container);
+        }
         return $this->request;
     }
 
@@ -147,55 +163,16 @@ class Form extends BaseForm
      */
     public function setRequest($request)
     {
-        if ($request === null) {
-            $this->request = null;
-            return $this;
-        }
-
-        if (!is_a($request, FormRequest::class, true)) {
+        if ($request !== null && !is_a($request, FormRequest::class, true)) {
             $requestClass = !is_object($request)
                 ? is_string($request) ? $request : gettype($request)
                 : get_class($request);
-            throw new \InvalidArgumentException("Invalid request class: '$requestClass', it must be an instance of " . FormRequest::class . '.');
-        } elseif (is_string($request)) {
-            $request = $this->createRequestFromBase($request);
+            throw new \InvalidArgumentException("Invalid request type: '$requestClass', it must be an instance of " . FormRequest::class . '.');
         }
 
         $this->request = $request;
+        $this->rulesParser = null;
         return $this;
-    }
-
-    /**
-     * @param string $requestClass
-     * @return FormRequest
-     */
-    protected function createRequestFromBase($requestClass)
-    {
-        $container = $this->getContainer();
-        $sourceRequest = $container['request'];
-
-        $result = $requestClass::createFromBase($sourceRequest);
-        $this->initializeRequest($result, $sourceRequest);
-
-        return $result;
-    }
-
-    /**
-     * @param FormRequest $request
-     * @param Request $sourceRequest
-     */
-    protected function initializeRequest($request, $sourceRequest)
-    {
-        if ($session = $sourceRequest->getSession()) {
-            $request->setSession($session);
-        }
-
-        $request->setUserResolver($sourceRequest->getUserResolver());
-        $request->setRouteResolver($sourceRequest->getRouteResolver());
-
-        $container = $this->getContainer();
-        $request->setContainer($container);
-        $request->setRedirector($container->make(Redirector::class));
     }
 
     /**
@@ -214,5 +191,18 @@ class Form extends BaseForm
     {
         $this->container = $container;
         return $this;
+    }
+
+    /**
+     * @return RulesParser
+     */
+    public function getRulesParser()
+    {
+        if ($this->rulesParser === null) {
+            $this->rulesParser = $this->getContainer()->make(RulesParser::class, [
+                'request' => $this->getRequest(),
+            ]);
+        }
+        return $this->rulesParser;
     }
 }
