@@ -160,7 +160,8 @@ class RulesParser
     {
         $validator = $this->getValidator();
         $numericRules = ValidatorWrapper::fetchNumericRulesNames($validator);
-        return (bool) count(array_intersect(array_keys($laravelRules), $numericRules));
+        $currentRules = array_column($laravelRules, 0);
+        return (bool) count(array_intersect($currentRules, $numericRules));
     }
 
     /**
@@ -171,7 +172,8 @@ class RulesParser
     {
         $validator = $this->getValidator();
         $fileRules = ValidatorWrapper::fetchFileRulesNames($validator);
-        return (bool) count(array_intersect(array_keys($laravelRules), $fileRules));
+        $currentRules = array_column($laravelRules, 0);
+        return (bool) count(array_intersect($currentRules, $fileRules));
     }
 
     /**

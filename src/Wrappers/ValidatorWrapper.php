@@ -81,6 +81,8 @@ class ValidatorWrapper extends Validator
      */
     public static function fetchFileRulesNames(Validator $validator)
     {
-        return $validator->fileRules;
+        $numericRules = static::fetchNumericRulesNames($validator);
+        $result = array_diff($validator->fileRules, $validator->sizeRules, $numericRules);
+        return array_values($result);
     }
 }
