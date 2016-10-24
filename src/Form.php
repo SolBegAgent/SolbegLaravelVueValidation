@@ -3,11 +3,15 @@
 namespace Solbeg\VueValidation;
 
 use Bootstrapper\Form as BaseForm;
+use Bootstrapper\Facades\ControlGroup;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Foundation\Http\FormRequest;
+
+use Solbeg\VueValidation\Helpers\IdGenerator;
+use Solbeg\VueValidation\Helpers\Json;
 
 /**
  * Class Form
@@ -16,6 +20,11 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class Form extends BaseForm
 {
+    /**
+     * @var string
+     */
+    public static $controlGroupErrorClass = 'has-error';
+
     /**
      * The current form request instance for the form.
      *
@@ -32,6 +41,11 @@ class Form extends BaseForm
      * @var RulesParser
      */
     private $rulesParser;
+
+    /**
+     * @var string|null
+     */
+    private $formId;
 
     /**
      * @inheritdoc
@@ -53,6 +67,14 @@ class Form extends BaseForm
     {
         if (isset($options['request'])) {
             $this->setRequest($options['request']);
+
+            if (!array_key_exists('id', $options)) {
+                $options['id'] = IdGenerator::generateId($this);
+            }
+        }
+
+        if (isset($options['id'])) {
+            $this->setFormId($options['id']);
         }
 
         return parent::open($options);
@@ -64,8 +86,39 @@ class Form extends BaseForm
     public function close()
     {
         $result = parent::close();
+
+        $vueJs = $this->renderVueJs();
+        if ($vueJs !== null) {
+            $result = $this->toHtmlString(implode(PHP_EOL, [
+                (string) $result,
+                (string) $this->html->jsCode($vueJs),
+            ]));
+        }
+
+        $this->setFormId(null);
         $this->setRequest(null);
         return $result;
+    }
+
+    /**
+     * @return string|null
+     * @throws \LogicException
+     */
+    protected function renderVueJs()
+    {
+        if (!$this->getRequest()) {
+            return null;
+        }
+
+        $formId = $this->getFormId();
+        if ($formId === null) {
+            throw new \LogicException('Cannot render Vue JS code until form ID will be defined.');
+        }
+
+        $jsOptions = Json::htmlEncode([
+            'el' => "#$formId",
+        ]);
+        return "new Vue($jsOptions);";
     }
 
     /**
@@ -140,8 +193,66 @@ class Form extends BaseForm
             $options['v-validate'] = true;
         }
 
-
         return parent::input($type, $name, $value, $options);
+    }
+
+    /**
+     * @param string $name input name
+     * @param array $attributes
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function vueError($name, array $attributes = [])
+    {
+        $jsEncodedName = Json::htmlEncode($name);
+        $label = "{{ errors.first($jsEncodedName) }}";
+
+        if (!array_key_exists('v-show', $attributes)) {
+            $attributes['v-show'] = "errors.has($jsEncodedName)";
+        }
+        if (!array_key_exists('style', $attributes)) {
+            $attributes['style'] = 'display:none;';
+        }
+
+        return $this->help($label, $attributes);
+    }
+
+    /**
+     * Generates a full control group with a label, control and help block
+     *
+     * @param string $inputName
+     * @param string $label The label
+     * @param string $control The form control
+     * @param string $help The help text
+     * @param int $labelSize The size of the label
+     * @param int $controlSize The size of the form control
+     * @return \Bootstrapper\ControlGroup
+     * @throws \Bootstrapper\Exceptions\ControlGroupException
+     */
+    public function controlGroup($inputName, $label, $control, $help = null, $labelSize = null, $controlSize = null)
+    {
+        if ($this->getRequest() && $help === null) {
+            $help = $this->vueError($inputName);
+            $addVueClass = true;
+        }
+
+        $result = ControlGroup::generate(
+            $label,
+            $control,
+            $help,
+            $labelSize,
+            $controlSize
+        );
+        /* @var $result \Bootstrapper\ControlGroup */
+
+        if (!empty($addVueClass)) {
+            $jsErrorClass = Json::htmlEncode(self::$controlGroupErrorClass);
+            $jsInputName = Json::htmlEncode($inputName);
+            $result->withAttributes([
+                ':class' => "{{$jsErrorClass}: errors.has($jsInputName)}",
+            ]);
+        }
+
+        return $result;
     }
 
     /**
@@ -172,6 +283,25 @@ class Form extends BaseForm
 
         $this->request = $request;
         $this->rulesParser = null;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getFormId()
+    {
+        return $this->formId;
+    }
+
+
+    /**
+     * @param string|null $formId
+     * @return static $this
+     */
+    public function setFormId($formId)
+    {
+        $this->formId = $formId;
         return $this;
     }
 
