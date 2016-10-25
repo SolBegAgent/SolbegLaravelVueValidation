@@ -24,17 +24,22 @@ abstract class AbstractRule implements Contracts\RuleConverter
     /**
      * @var string
      */
+    private $laravelAttribute;
+
+    /**
+     * @var string
+     */
+    private $message;
+
+    /**
+     * @var string
+     */
     private $laravelRule;
 
     /**
      * @var array
      */
     private $laravelParams = [];
-
-    /**
-     * @var array
-     */
-    private $allLaravelRules = [];
 
     /**
      * @var integer
@@ -60,26 +65,44 @@ abstract class AbstractRule implements Contracts\RuleConverter
      * AbstractRule constructor.
      *
      * @param string $inputName
+     * @param string $attribute
+     * @param string $message
      * @param string $rule
      * @param array $params
-     * @param array $allRules
      * @param integer $attributeOptions
      */
-    public function __construct($inputName, $rule, array $params = [], array $allRules = [], $attributeOptions = 0)
+    public function __construct($inputName, $attribute, $message, $rule, array $params = [], $attributeOptions = 0)
     {
         $this->inputName = $inputName;
+        $this->laravelAttribute = $attribute;
+        $this->message = $message;
         $this->laravelRule = $rule;
         $this->laravelParams = $params;
-        $this->allLaravelRules = $allRules;
         $this->attributeOptions = $attributeOptions;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInputName()
+    {
+        return $this->inputName;
     }
 
     /**
      * @return string
      */
-    public function getInputName()
+    public function getLaravelAttribute()
     {
-        return $this->inputName;
+        return $this->laravelAttribute;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessage()
+    {
+        return $this->message;
     }
 
     /**
@@ -136,14 +159,6 @@ abstract class AbstractRule implements Contracts\RuleConverter
     protected function getNormalizedLaravelRule()
     {
         return Str::snake($this->getLaravelRule(), '_');
-    }
-
-    /**
-     * @return array
-     */
-    public function getAllLaravelRules()
-    {
-        return $this->allLaravelRules;
     }
 
     /**

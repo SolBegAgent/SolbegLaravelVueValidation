@@ -67,7 +67,7 @@ class Factory implements Contracts\ConverterFactory
     /**
      * @inheritdoc
      */
-    public function make($inputName, $rule, array $params = [], array $allRules = [], $attributeOptions = 0)
+    public function make($inputName, $attribute, $message, $rule, array $params = [], $attributeOptions = 0)
     {
         if (!isset($this->converters[$rule])) {
             throw new \InvalidArgumentException("Unknown rule: '$rule'.'");
@@ -77,14 +77,15 @@ class Factory implements Contracts\ConverterFactory
         if ($config instanceof Contracts\RuleConverter) {
             return $config;
         } elseif ($config instanceof \Closure) {
-            return $this->inline($config, $inputName, $rule, $params, $allRules, $attributeOptions);
+            return $this->inline($config, $inputName, $attribute, $message, $rule, $params, $attributeOptions);
         }
 
         $converter = $this->getContainer()->make($config, [
             'inputName' => $inputName,
+            'attribute' => $attribute,
+            'message' => $message,
             'rule' => $rule,
             'params' => $params,
-            'allRules' => $allRules,
             'attributeOptions' => $attributeOptions,
         ]);
         if (!$converter instanceof Contracts\RuleConverter) {
@@ -96,15 +97,16 @@ class Factory implements Contracts\ConverterFactory
     /**
      * @param callable $callback
      * @param string $inputName
+     * @param string $attribute
+     * @param string $message
      * @param string $rule
      * @param array $params
-     * @param array $allRules
      * @param integer $attributeOptions
      * @return InlineRule
      */
-    public function inline(callable $callback, $inputName, $rule, array $params = [], array $allRules = [], $attributeOptions = 0)
+    public function inline(callable $callback, $inputName, $attribute, $message, $rule, array $params = [], $attributeOptions = 0)
     {
-        return new InlineRule($callback, $inputName, $rule, $params, $allRules, $attributeOptions);
+        return new InlineRule($callback, $inputName, $attribute, $message, $rule, $params, $attributeOptions);
     }
 
     /**

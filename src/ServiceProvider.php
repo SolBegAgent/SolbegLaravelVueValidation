@@ -21,6 +21,14 @@ class ServiceProvider extends BaseServiceProvider
     protected $defer = true;
 
     /**
+     * Boots the service provider.
+     */
+    public function boot()
+    {
+        $this->publishAssets();
+    }
+
+    /**
      * Registers services.
      */
     public function register()
@@ -65,6 +73,16 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->app->singleton(self::SERVICE_CONVERTER, Converter\Factory::class);
         $this->app->alias(self::SERVICE_CONVERTER, Contracts\ConverterFactory::class);
+    }
+
+    /**
+     * Publishes assets
+     */
+    protected function publishAssets()
+    {
+        $this->publishes([
+            __DIR__ . '/assets' => public_path('vendor/solbeg/laravel-vue-validation'),
+        ], 'public');
     }
 
     /**

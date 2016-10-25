@@ -48,6 +48,11 @@ class Form extends BaseForm
     private $formId;
 
     /**
+     * @var Contracts\RuleConverter[]
+     */
+    private $parsedRules = [];
+
+    /**
      * @inheritdoc
      */
     public function __construct(HtmlBuilder $html, UrlGenerator $url, Factory $view, $csrfToken)
@@ -68,7 +73,7 @@ class Form extends BaseForm
         if (isset($options['request'])) {
             $this->setRequest($options['request']);
 
-            if (!array_key_exists('id', $options)) {
+            if (!isset($options['id'])) {
                 $options['id'] = IdGenerator::generateId($this);
             }
         }
@@ -81,13 +86,14 @@ class Form extends BaseForm
     }
 
     /**
+     * @param array $vueOptions
      * @inheritdoc
      */
-    public function close()
+    public function close(array $vueOptions = [])
     {
         $result = parent::close();
 
-        $vueJs = $this->renderVueJs();
+        $vueJs = $this->renderVueJs($vueOptions);
         if ($vueJs !== null) {
             $result = $this->toHtmlString(implode(PHP_EOL, [
                 (string) $result,
@@ -97,14 +103,16 @@ class Form extends BaseForm
 
         $this->setFormId(null);
         $this->setRequest(null);
+        $this->clearParsedRules();
         return $result;
     }
 
     /**
+     * @param array $options
      * @return string|null
      * @throws \LogicException
      */
-    protected function renderVueJs()
+    public function renderVueJs(array $options = [])
     {
         if (!$this->getRequest()) {
             return null;
@@ -115,10 +123,32 @@ class Form extends BaseForm
             throw new \LogicException('Cannot render Vue JS code until form ID will be defined.');
         }
 
-        $jsOptions = Json::htmlEncode([
+        $jsOptions = Json::encode(array_merge([
             'el' => "#$formId",
-        ]);
-        return "new Vue($jsOptions);";
+        ], $options));
+
+        $jsMessages = Json::encode($this->generateAllVueMessages());
+        return "solbeg.initVueValidation($jsOptions, $jsMessages);";
+    }
+
+    /**
+     * @return array[]
+     */
+    protected function generateAllVueMessages()
+    {
+        $result = [];
+
+        foreach ($this->getParsedRules() as $rule) {
+            $inputName = $rule->getInputName();
+            $message = $rule->getMessage();
+
+            foreach ($rule->getVueRules() as $vueRule => $vueParams) {
+                $vueParams = array_values(array_map('strval', $vueParams));
+                $result[] = [$inputName, $vueRule, $vueParams, $message];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -186,6 +216,7 @@ class Form extends BaseForm
         if ($this->getRequest()) {
             if ($rules = $this->getRulesParser()->generateVueRules($name)) {
                 $options['data-rules'] = implode('|', $rules);
+                $this->addParsedRules($rules);
             }
         }
 
@@ -203,7 +234,7 @@ class Form extends BaseForm
      */
     public function vueError($name, array $attributes = [])
     {
-        $jsEncodedName = Json::htmlEncode($name);
+        $jsEncodedName = Json::encode($name);
         $label = "{{ errors.first($jsEncodedName) }}";
 
         if (!array_key_exists('v-show', $attributes)) {
@@ -245,8 +276,8 @@ class Form extends BaseForm
         /* @var $result \Bootstrapper\ControlGroup */
 
         if (!empty($addVueClass)) {
-            $jsErrorClass = Json::htmlEncode(self::$controlGroupErrorClass);
-            $jsInputName = Json::htmlEncode($inputName);
+            $jsErrorClass = Json::encode(self::$controlGroupErrorClass);
+            $jsInputName = Json::encode($inputName);
             $result->withAttributes([
                 ':class' => "{{$jsErrorClass}: errors.has($jsInputName)}",
             ]);
@@ -334,5 +365,32 @@ class Form extends BaseForm
             ]);
         }
         return $this->rulesParser;
+    }
+
+    /**
+     * @param Contracts\RuleConverter[]|Contracts\RuleConverter $rules
+     * @return static $this
+     */
+    public function addParsedRules($rules)
+    {
+        $this->parsedRules = array_merge($this->parsedRules, (array) $rules);
+        return $this;
+    }
+
+    /**
+     * @return static $this
+     */
+    public function clearParsedRules()
+    {
+        $this->parsedRules = [];
+        return $this;
+    }
+
+    /**
+     * @return Contracts\RuleConverter[]
+     */
+    public function getParsedRules()
+    {
+        return $this->parsedRules;
     }
 }

@@ -13,6 +13,11 @@ interface RuleConverter
     const OPTION_ATTRIBUTE_IS_FILE = 0b00000001;
 
     /**
+     * @return string
+     */
+    public function getInputName();
+
+    /**
      * @return array in rule => params format.
      */
     public function getVueRules();
@@ -31,6 +36,11 @@ interface RuleConverter
      * @return integer
      */
     public function getAttributeOptions();
+
+    /**
+     * @return string
+     */
+    public function getMessage();
 
     /**
      * @return string

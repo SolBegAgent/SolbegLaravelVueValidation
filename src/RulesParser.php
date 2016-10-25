@@ -102,15 +102,17 @@ class RulesParser
         $laravelRules = $this->parseLaravelRules($inputName);
         $attributeOptions = $this->detectAttributeOptions($laravelRules);
         $factory = $this->getConverter();
+        $validator = $this->getValidator();
         $result = [];
 
         foreach ($laravelRules as $data) {
-            list($rule, $params) = $data;
+            list($rule, $params, $attribute) = $data;
             if (!$factory->knows($rule)) {
                 continue;
             }
 
-            $converter = $factory->make($inputName, $rule, $params, $laravelRules, $attributeOptions);
+            $message = ValidatorWrapper::generateErrorMessage($validator, $attribute, $rule, $params);
+            $converter = $factory->make($inputName, $attribute, $message, $rule, $params, $attributeOptions);
             if ($converter->isValid()) {
                 $result[] = $converter;
             }
@@ -123,7 +125,7 @@ class RulesParser
      * @param string $inputName
      * @return array[]
      */
-    public function parseLaravelRules($inputName)
+    protected function parseLaravelRules($inputName)
     {
         $validator = $this->getValidator();
         $rules = ValidatorWrapper::fetchInitialRules($validator);
@@ -131,7 +133,9 @@ class RulesParser
         $result = [];
         foreach ($rules as $attribute => $rules) {
             if ($this->isAttributeMatchesInputName($attribute, $inputName)) {
-                $result = array_merge($result, ValidatorWrapper::extractRulesWithParams($validator, $rules));
+                foreach (ValidatorWrapper::extractRulesWithParams($validator, $rules) as $ruleData) {
+                    $result[] = array_merge($ruleData, [$attribute]);
+                }
             }
         }
         return $result;

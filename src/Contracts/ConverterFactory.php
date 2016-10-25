@@ -11,13 +11,14 @@ interface ConverterFactory
 {
     /**
      * @param string $inputName
+     * @param string $attribute
+     * @param string $message
      * @param string $rule
      * @param array $params
-     * @param array $allRules
      * @param integer $attributeOptions
      * @return RuleConverter
      */
-    public function make($inputName, $rule, array $params, array $allRules, $attributeOptions);
+    public function make($inputName, $attribute, $message, $rule, array $params, $attributeOptions);
 
     /**
      * @param string $rule

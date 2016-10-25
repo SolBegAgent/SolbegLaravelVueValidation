@@ -25,15 +25,16 @@ class InlineRule extends AbstractRule
      * InlineRule constructor.
      * @param callable $callback
      * @param string $inputName
+     * @param string $attribute
+     * @param string $message
      * @param string $rule
      * @param array $params
-     * @param array $allRules
      * @param integer $attributeOptions
      */
-    public function __construct(callable $callback, $inputName, $rule, array $params = [], array $allRules = [], $attributeOptions = 0)
+    public function __construct(callable $callback, $inputName, $attribute, $message, $rule, array $params = [], $attributeOptions = 0)
     {
         $this->callback = $callback;
-        parent::__construct($inputName, $rule, $params, $allRules, $attributeOptions);
+        parent::__construct($inputName, $attribute, $message, $rule, $params, $attributeOptions);
     }
 
     /**

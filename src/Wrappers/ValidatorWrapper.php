@@ -85,4 +85,19 @@ class ValidatorWrapper extends Validator
         $result = array_diff($validator->fileRules, $validator->sizeRules, $numericRules);
         return array_values($result);
     }
+
+    /**
+     * @see Validator::addError()
+     *
+     * @param Validator $validator
+     * @param string $attribute
+     * @param string $rule
+     * @param array $params
+     * @return string
+     */
+    public static function generateErrorMessage(Validator $validator, $attribute, $rule, array $params = [])
+    {
+        $message = $validator->getMessage($attribute, $rule);
+        return $validator->doReplacements($message, $attribute, $rule, $params);
+    }
 }
