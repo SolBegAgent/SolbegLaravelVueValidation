@@ -66,10 +66,31 @@
         }
     };
 
+    var fillErrors = function (vueObj, errors) {
+        for (var field in errors) {
+            if (errors.hasOwnProperty(field)) {
+                vueObj.$validator.errorBag.add(field, errors[field]);
+            }
+        }
+    };
+
     global.solbeg.vueErrorMessagesBag = MessagesBag;
 
-    global.solbeg.initVueValidation = function (vueOptions, errorMessages) {
-        var vueObj = new Vue(vueOptions || {}),
+    global.solbeg.initVueValidation = function (vueOptions, errorMessages, initErrors) {
+        vueOptions = vueOptions || {};
+
+        var readyHandler = vueOptions.hasOwnProperty('ready') ? vueOptions['ready'] : null;
+        vueOptions.ready = function () {
+            this.$nextTick(function () {
+                fillErrors(this, initErrors || {});
+
+            });
+            if (readyHandler) {
+                return readyHandler.apply(this, arguments);
+            }
+        };
+
+        var vueObj = new Vue(vueOptions),
             defaultMessageFormatter = vueObj.$validator._formatErrorMessage,
             msgBag = new global.solbeg.vueErrorMessagesBag(isArray(errorMessages) ? errorMessages : []);
 

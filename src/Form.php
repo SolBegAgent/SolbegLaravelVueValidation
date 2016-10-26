@@ -9,6 +9,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\ViewErrorBag;
 
 use Solbeg\VueValidation\Helpers\IdGenerator;
 use Solbeg\VueValidation\Helpers\Json;
@@ -128,7 +129,21 @@ class Form extends BaseForm
         ], $options));
 
         $jsMessages = Json::encode($this->generateAllVueMessages());
-        return "solbeg.initVueValidation($jsOptions, $jsMessages);";
+        $jsBackendErrors = Json::encode($this->generateAllLaravelMessages() ?: new \stdClass);
+        return "solbeg.initVueValidation($jsOptions, $jsMessages, $jsBackendErrors);";
+    }
+
+    /**
+     * @return array
+     */
+    protected function generateAllLaravelMessages()
+    {
+        $errors = $this->getRequest()->getSession()->get('errors') ?: new \Illuminate\Support\ViewErrorBag();
+        $result = [];
+        foreach ($errors->keys() as $field) {
+            $result[$field] = $errors->first($field);
+        }
+        return $result;
     }
 
     /**
