@@ -61,8 +61,12 @@ class RegexRule extends AbstractRule
         $params = $this->requireLaravelParams(1);
         $jsRegexp = JsRegexpConverter::convert($params[0], true);
 
-        if (strpos($jsRegexp[0], '|') !== false || strpos($jsRegexp[1], ',') !== false) {
-            return $this->jsRegexp = false;
+        if (array_key_exists(1, $jsRegexp) && !strlen($jsRegexp[1])) {
+            unset($jsRegexp[1]);
+        }
+
+        if (strpos($jsRegexp[0], '|') !== false || strpos($jsRegexp[0], ',') !== false) {
+            $jsRegexp = false;
         }
         return $this->jsRegexp = $jsRegexp;
     }
