@@ -100,4 +100,15 @@ class ValidatorWrapper extends Validator
         $message = $validator->getMessage($attribute, $rule);
         return $validator->doReplacements($message, $attribute, $rule, $params);
     }
+
+    /**
+     * @see Validator::getAttribute()
+     *
+     * @param Validator $validator
+     * @param string $attribute
+     */
+    public static function generateAttributeDisplayName(Validator $validator, $attribute)
+    {
+        return $validator->getAttribute($attribute);
+    }
 }

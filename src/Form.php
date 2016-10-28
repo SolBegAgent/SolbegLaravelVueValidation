@@ -77,6 +77,11 @@ class Form extends BaseForm
             if (!isset($options['id'])) {
                 $options['id'] = IdGenerator::generateId($this);
             }
+            $options['data-scope'] = $options['id'];
+
+            if (!isset($options['v-form-valdation'])) {
+                $options['v-form-validation'] = true;
+            }
         }
 
         if (isset($options['id'])) {
@@ -87,10 +92,10 @@ class Form extends BaseForm
     }
 
     /**
-     * @param array $vueOptions
+     * @param array|boolean $vueOptions
      * @inheritdoc
      */
-    public function close(array $vueOptions = [])
+    public function close($vueOptions = true)
     {
         $result = parent::close();
 
@@ -109,14 +114,16 @@ class Form extends BaseForm
     }
 
     /**
-     * @param array $options
+     * @param array|boolean $options
      * @return string|null
      * @throws \LogicException
      */
-    public function renderVueJs(array $options = [])
+    public function renderVueJs($options = true)
     {
-        if (!$this->getRequest()) {
+        if (!$this->getRequest() || in_array($options, [false, null], true)) {
             return null;
+        } elseif ($options === true) {
+            $options = [];
         }
 
         $formId = $this->getFormId();
@@ -127,43 +134,7 @@ class Form extends BaseForm
         $jsOptions = Json::encode(array_merge([
             'el' => "#$formId",
         ], $options));
-
-        $jsMessages = Json::encode($this->generateAllVueMessages());
-        $jsBackendErrors = Json::encode($this->generateAllLaravelMessages() ?: new \stdClass);
-        return "solbeg.initVueValidation($jsOptions, $jsMessages, $jsBackendErrors);";
-    }
-
-    /**
-     * @return array
-     */
-    protected function generateAllLaravelMessages()
-    {
-        $errors = $this->getRequest()->getSession()->get('errors') ?: new \Illuminate\Support\ViewErrorBag();
-        $result = [];
-        foreach ($errors->keys() as $field) {
-            $result[$field] = $errors->first($field);
-        }
-        return $result;
-    }
-
-    /**
-     * @return array[]
-     */
-    protected function generateAllVueMessages()
-    {
-        $result = [];
-
-        foreach ($this->getParsedRules() as $rule) {
-            $inputName = $rule->getInputName();
-            $message = $rule->getMessage();
-
-            foreach ($rule->getVueRules() as $vueRule => $vueParams) {
-                $vueParams = array_values(array_map('strval', $vueParams));
-                $result[] = [$inputName, $vueRule, $vueParams, $message];
-            }
-        }
-
-        return $result;
+        return "new Vue($jsOptions);";
     }
 
     /**
@@ -230,8 +201,19 @@ class Form extends BaseForm
     {
         if ($this->getRequest()) {
             if ($rules = $this->getRulesParser()->generateVueRules($name)) {
-                $options['data-rules'] = implode('|', $rules);
+                $options['data-rules'] = implode('|', array_filter(array_merge([
+                    isset($options['data-rules']) ? $options['data-rules'] : null,
+                ], $rules)));
                 $this->addParsedRules($rules);
+
+                $options['v-validation-messages'] = Json::encode(array_merge(
+                    isset($options['v-validation-messages']) ? $options['v-validation-messages'] : [],
+                    $this->generateVueMessages($rules)
+                ));
+            }
+
+            if (isset($options['data-rules']) && !isset($options['data-as'])) {
+                $options['data-as'] = $this->getRulesParser()->getAttributeDisplayName($name);
             }
         }
 
@@ -239,7 +221,31 @@ class Form extends BaseForm
             $options['v-validate'] = true;
         }
 
+        if (isset($options['data-rules']) && !isset($options['v-validation-error'])) {
+            $error = ($this->getRequest()->getSession()->get('errors') ?: new ViewErrorBag)->first($name);
+            if ($error) {
+                $options['v-validation-error'] = $error;
+            }
+        }
+
         return parent::input($type, $name, $value, $options);
+    }
+
+    /**
+     * @param Contracts\RuleConverter[] $rules
+     * @return array
+     */
+    protected function generateVueMessages(array $rules)
+    {
+        $result = [];
+        foreach ($rules as $rule) {
+            $message = $rule->getMessage();
+            foreach ($rule->getVueRules() as $vueRule => $vueParams) {
+                $vueParams = array_values(array_map('strval', $vueParams));
+                $result[] = [$vueRule, $vueParams, $message];
+            }
+        }
+        return $result;
     }
 
     /**
@@ -250,10 +256,11 @@ class Form extends BaseForm
     public function vueError($name, array $attributes = [])
     {
         $jsEncodedName = Json::encode($name);
-        $label = "{{ errors.first($jsEncodedName) }}";
+        $jsFormId = Json::encode($this->getFormId());
+        $label = "{{ errors.first($jsEncodedName, $jsFormId) }}";
 
         if (!array_key_exists('v-show', $attributes)) {
-            $attributes['v-show'] = "errors.has($jsEncodedName)";
+            $attributes['v-show'] = "errors.has($jsEncodedName, $jsFormId)";
         }
         if (!array_key_exists('style', $attributes)) {
             $attributes['style'] = 'display:none;';
@@ -293,8 +300,9 @@ class Form extends BaseForm
         if (!empty($addVueClass)) {
             $jsErrorClass = Json::encode(self::$controlGroupErrorClass);
             $jsInputName = Json::encode($inputName);
+            $jsFormId = Json::encode($this->getFormId());
             $result->withAttributes([
-                ':class' => "{{$jsErrorClass}: errors.has($jsInputName)}",
+                ':class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsFormId)}",
             ]);
         }
 

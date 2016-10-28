@@ -41,6 +41,7 @@ And add the facade of this package to the `aliases` array.
 ```php
     // ...
     'F' => Solbeg\VueValidation\Facades\Form::class,
+    'HTML' => Solbeg\VueValidation\Facades\Html::class,
     // ...
 ```
 
@@ -55,6 +56,13 @@ Connect JS file for this plugin in your layout.
 
 ```twig
 <script src="{{ asset('vendor/solbeg/laravel-vue-validation/init-vue-validation.js') }}"></script>
+```
+
+Add the following JS code in your layout,
+so the Vue will use this plugin for validating:
+
+```js
+Vue.use(SolbegLaravelVueValidation);
 ```
 
 ## Usage
@@ -87,6 +95,13 @@ In your blade template:
         'prop1' => 'val1',
     ],
 ]) }}
+
+{{-- OR without additional Vue options --}}
+{{ F::close() }}
+{{ F::close(true) }}
+
+{{-- OR `false` if you initialize Vue object by himself --}}
+{{ F::close(false) }}
 
 ```
 

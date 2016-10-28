@@ -142,6 +142,23 @@ class RulesParser
     }
 
     /**
+     * @param string $inputName
+     * @return string
+     */
+    public function getAttributeDisplayName($inputName)
+    {
+        $validator = $this->getValidator();
+        $rules = ValidatorWrapper::fetchInitialRules($validator);
+
+        foreach ($rules as $attribute => $rules) {
+            if ($this->isAttributeMatchesInputName($attribute, $inputName)) {
+                return ValidatorWrapper::generateAttributeDisplayName($validator, $attribute);
+            }
+        }
+        return ValidatorWrapper::generateAttributeDisplayName($validator, $inputName);
+    }
+
+    /**
      * Normalizes input name.
      * @see \Collective\Html\FormBuilder::transformKey()
      * @see \Illuminate\Validation\Validator::passes()
