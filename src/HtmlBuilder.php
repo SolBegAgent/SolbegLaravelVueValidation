@@ -45,4 +45,15 @@ class HtmlBuilder extends BaseHtmlBuilder
             '</script>',
         ]) . PHP_EOL);
     }
+
+    /**
+     * @see \Solbeg\VueValidation\Helpers\Json::encode()
+     * @param mixed $data
+     * @param integer|null $options
+     * @return string
+     */
+    public function encodeJs($data, $options = null)
+    {
+        return Helpers\Json::encode($data, $options);
+    }
 }
