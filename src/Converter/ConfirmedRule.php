@@ -28,7 +28,12 @@ class ConfirmedRule extends AbstractRule
             $params = [$this->generateTargetName()];
         }
 
-        return ['confirmed' => $params];
+        $rule = $this->getNormalizedLaravelRule();
+        if ($rule !== 'confirmed') {
+            $rule = 'same';
+        }
+
+        return [$rule => $params];
     }
 
     /**
