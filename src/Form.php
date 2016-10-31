@@ -199,6 +199,35 @@ class Form extends BaseForm
      */
     public function input($type, $name, $value = null, $options = [])
     {
+        $this->normalizeOptionsByRequest($name, $options, __FUNCTION__ . ".$type");
+        return parent::input($type, $name, $value, $options);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function select($name, $list = [], $selected = null, $attributes = [])
+    {
+        $this->normalizeOptionsByRequest($name, $attributes, __FUNCTION__);
+        return parent::select($name, $list, $selected, $attributes);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function textarea($name, $value = null, $attributes = [])
+    {
+        $this->normalizeOptionsByRequest($name, $attributes, __FUNCTION__);
+        return parent::textarea($name, $value, $attributes);
+    }
+
+    /**
+     * @param string $name
+     * @param array $options
+     * @param string $type
+     */
+    protected function normalizeOptionsByRequest($name, array &$options = [], $type = 'text')
+    {
         if ($this->getRequest()) {
             if ($rules = $this->getRulesParser()->generateVueRules($name)) {
                 $options['data-rules'] = implode('|', array_filter(array_merge([
@@ -227,8 +256,6 @@ class Form extends BaseForm
                 $options['v-validation-error'] = $error;
             }
         }
-
-        return parent::input($type, $name, $value, $options);
     }
 
     /**

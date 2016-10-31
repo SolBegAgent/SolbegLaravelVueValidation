@@ -20,6 +20,11 @@ abstract class AbstractNumberRule extends AbstractRule
     public function getVueRules()
     {
         $regexp = $this->getNumberRegexp();
+
+        if (!$this->isValidRegexp($regexp)) {
+            throw new \LogicException("Invalid regular expression in '{$this->getNormalizedLaravelRule()}' rule: '$regexp'. It cannot contain '|' and/or ',' chars.");
+        }
+
         return ['regex' => [$regexp]];
     }
 
@@ -37,5 +42,14 @@ abstract class AbstractNumberRule extends AbstractRule
     public function isDateRule()
     {
         return false;
+    }
+
+    /**
+     * @param string $regexp
+     * @return boolean
+     */
+    protected function isValidRegexp($regexp)
+    {
+        return strpos($regexp, '|') === false && strpos($regexp, ',') === false;
     }
 }

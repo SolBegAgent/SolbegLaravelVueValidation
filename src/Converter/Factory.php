@@ -35,6 +35,7 @@ class Factory implements Contracts\ConverterFactory
         'Filled' => RequiredRule::class,
         'Image' => SimpleRule::class,
         'In' => SimpleRule::class,
+        'Integer' => IntegerRule::class,
         'Ip' => SimpleRule::class,
         'Max' => MinMaxRule::class,
         'Mimetypes' => MimetypesRules::class,
