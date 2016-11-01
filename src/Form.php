@@ -199,7 +199,7 @@ class Form extends BaseForm
      */
     public function input($type, $name, $value = null, $options = [])
     {
-        $this->normalizeOptionsByRequest($name, $options, __FUNCTION__ . ".$type");
+        $options = $this->prepareVueOptions($name, $options, __FUNCTION__ . ".$type");
         return parent::input($type, $name, $value, $options);
     }
 
@@ -208,8 +208,52 @@ class Form extends BaseForm
      */
     public function select($name, $list = [], $selected = null, $attributes = [])
     {
-        $this->normalizeOptionsByRequest($name, $attributes, __FUNCTION__);
+        $attributes = $this->prepareVueOptions($name, $attributes, __FUNCTION__);
         return parent::select($name, $list, $selected, $attributes);
+    }
+
+    /**
+     * @param string $name
+     * @param string $dictionary
+     * @param array $selectAttributes
+     * @param array $optionAttributes
+     * @param string $optionContent
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function vueSelect($name, $dictionary, $selectAttributes = [], $optionAttributes = [], $optionContent = '{{ name }}')
+    {
+        $selectAttributes = $this->prepareVueOptions($name, $selectAttributes, 'select');
+
+        $selectAttributes['id'] = $this->getIdAttribute($name, $selectAttributes);
+        if (!isset($selectAttributes['name'])) {
+            $selectAttributes['name'] = $name;
+        }
+        $selectAttributes['class'] = isset($selectAttributes['class']) ?
+            self::FORM_CONTROL . ' ' . $selectAttributes['class'] :
+            self::FORM_CONTROL;
+
+        $selectedValue = isset($selectAttributes['value']) ? $selectAttributes['value'] : null;
+        unset($selectAttributes['value']);
+
+        $html = [];
+        if (isset($selectAttributes['placeholder'])) {
+            $html[] = $this->placeholderOption($selectAttributes['placeholder'], $selectedValue);
+            unset($selectAttributes['placeholder']);
+        }
+
+        if (!isset($optionAttributes['v-for'])) {
+            $optionAttributes['v-for'] = "(id, name) in $dictionary";
+        }
+        if (!isset($optionAttributes['v-bind:value']) && !isset($optionAttributes[':value'])) {
+            $optionAttributes['v-bind:value'] = 'id';
+        }
+        $html[] = $this->toHtmlString('<option' . $this->html->attributes($optionAttributes) . ">$optionContent</option>");
+
+        return $this->toHtmlString(implode('', [
+            '<select' . $this->html->attributes($selectAttributes) . '>',
+            implode('', $html),
+            '</select>',
+        ]));
     }
 
     /**
@@ -217,7 +261,7 @@ class Form extends BaseForm
      */
     public function textarea($name, $value = null, $attributes = [])
     {
-        $this->normalizeOptionsByRequest($name, $attributes, __FUNCTION__);
+        $attributes = $this->prepareVueOptions($name, $attributes, __FUNCTION__);
         return parent::textarea($name, $value, $attributes);
     }
 
@@ -225,8 +269,9 @@ class Form extends BaseForm
      * @param string $name
      * @param array $options
      * @param string $type
+     * @return array
      */
-    protected function normalizeOptionsByRequest($name, array &$options = [], $type = 'text')
+    public function prepareVueOptions($name, array $options = [], $type = 'text')
     {
         if ($this->getRequest()) {
             if ($rules = $this->getRulesParser()->generateVueRules($name)) {
@@ -256,6 +301,8 @@ class Form extends BaseForm
                 $options['v-validation-error'] = $error;
             }
         }
+
+        return $options;
     }
 
     /**
