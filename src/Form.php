@@ -376,7 +376,7 @@ class Form extends BaseForm
             $jsInputName = Json::encode($inputName);
             $jsFormId = Json::encode($this->getFormId());
             $result->withAttributes([
-                ':class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsFormId)}",
+                'v-bind:class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsFormId)}",
             ]);
         }
 
