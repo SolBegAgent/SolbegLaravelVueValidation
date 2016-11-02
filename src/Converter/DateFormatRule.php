@@ -47,20 +47,24 @@ class DateFormatRule extends AbstractRule
     protected function getVueDateParams()
     {
         $params = $this->requireLaravelParams(1);
-        if (!is_string($params[0]) || !strlen($params[0])) {
+        $params[0] = $this->convertDateFormat($params[0]);
+        if ($params[0] === false) {
             throw new \LogicException("A valid format string is required as parameter for {$this->getNormalizedLaravelRule()} validation rule.");
         }
-        $params[0] = $this->convertDateFormat($params[0]);
         return $params;
     }
 
     /**
      * @param string $phpFormat
-     * @return string
+     * @return string|false
      * @throws \Exception
      */
     protected function convertDateFormat($phpFormat)
     {
-        return MomentJsFormatConverter::convert($phpFormat);
+        $result = MomentJsFormatConverter::convert($phpFormat);
+        if (!is_string($result) || !strlen($result) || strpos($result, '|') !== false || strpos($result, ',') !== false) {
+            return false;
+        }
+        return $result;
     }
 }
