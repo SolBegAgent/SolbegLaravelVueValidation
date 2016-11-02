@@ -169,8 +169,17 @@ class RulesParser
      */
     protected function isAttributeMatchesInputName($attribute, $inputName)
     {
-        $normalizedInputName = str_replace(['.', '[]', '[', ']'], ['\.', '.*', '.', ''], $inputName);
+        $normalizedInputName = $this->convertInputNameToAttribute($inputName);
         return Str::is($attribute, $normalizedInputName);
+    }
+
+    /**
+     * @param string $inputName
+     * @return string
+     */
+    public function convertInputNameToAttribute($inputName)
+    {
+        return str_replace(['.', '[]', '[', ']'], ['\.', '.*', '.', ''], $inputName);
     }
 
     /**

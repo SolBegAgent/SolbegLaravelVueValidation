@@ -49,6 +49,11 @@ class Form extends BaseForm
     private $formId;
 
     /**
+     * @var string[]
+     */
+    private $vueScopes = [];
+
+    /**
      * @var Contracts\RuleConverter[]
      */
     private $parsedRules = [];
@@ -78,6 +83,7 @@ class Form extends BaseForm
                 $options['id'] = IdGenerator::generateId($this);
             }
             $options['data-scope'] = $options['id'];
+            $this->beginVueScope($options['id']);
 
             if (!isset($options['v-form-valdation'])) {
                 $options['v-form-validation'] = true;
@@ -107,6 +113,7 @@ class Form extends BaseForm
             ]));
         }
 
+        $this->clearVueScopes();
         $this->setFormId(null);
         $this->setRequest(null);
         $this->clearParsedRules();
@@ -289,16 +296,24 @@ class Form extends BaseForm
             if (isset($options['data-rules']) && !isset($options['data-as'])) {
                 $options['data-as'] = $this->getRulesParser()->getAttributeDisplayName($name);
             }
+
+            if (isset($options['data-rules']) && !isset($options['v-validation-error'])) {
+                $attributeName = $this->getRulesParser()->convertInputNameToAttribute($name);
+                $error = ($this->getRequest()->getSession()->get('errors') ?: new ViewErrorBag)->first($attributeName);
+                if ($error) {
+                    $options['v-validation-error'] = $error;
+                }
+            }
         }
 
         if (isset($options['data-rules']) && !isset($options['v-validate'])) {
             $options['v-validate'] = true;
         }
 
-        if (isset($options['data-rules']) && !isset($options['v-validation-error'])) {
-            $error = ($this->getRequest()->getSession()->get('errors') ?: new ViewErrorBag)->first($name);
-            if ($error) {
-                $options['v-validation-error'] = $error;
+        if (isset($options['data-rules']) && !isset($options['data-scope'])) {
+            $currentVueScope = $this->getCurrentVueScope();
+            if ($this->getFormId() !== $currentVueScope) {
+                $options['data-scope'] = $currentVueScope;
             }
         }
 
@@ -330,11 +345,11 @@ class Form extends BaseForm
     public function vueError($name, array $attributes = [])
     {
         $jsEncodedName = Json::encode($name);
-        $jsFormId = Json::encode($this->getFormId());
-        $label = "{{ errors.first($jsEncodedName, $jsFormId) }}";
+        $jsScope = Json::encode($this->getCurrentVueScope());
+        $label = "{{ errors.first($jsEncodedName, $jsScope) }}";
 
         if (!array_key_exists('v-show', $attributes)) {
-            $attributes['v-show'] = "errors.has($jsEncodedName, $jsFormId)";
+            $attributes['v-show'] = "errors.has($jsEncodedName, $jsScope)";
         }
         if (!array_key_exists('style', $attributes)) {
             $attributes['style'] = 'display:none;';
@@ -352,14 +367,14 @@ class Form extends BaseForm
      * @param string $help The help text
      * @param int $labelSize The size of the label
      * @param int $controlSize The size of the form control
+     * @param boolean|null $addVueClass
      * @return \Bootstrapper\ControlGroup
      * @throws \Bootstrapper\Exceptions\ControlGroupException
      */
-    public function controlGroup($inputName, $label, $control, $help = null, $labelSize = null, $controlSize = null)
+    public function controlGroup($inputName, $label, $control, $help = null, $labelSize = null, $controlSize = null, $addVueClass = null)
     {
         if ($this->getRequest() && $help === null) {
             $help = $this->vueError($inputName);
-            $addVueClass = true;
         }
 
         $result = ControlGroup::generate(
@@ -371,12 +386,12 @@ class Form extends BaseForm
         );
         /* @var $result \Bootstrapper\ControlGroup */
 
-        if (!empty($addVueClass)) {
+        if (($addVueClass === null && $this->getRequest()) || $addVueClass) {
             $jsErrorClass = Json::encode(self::$controlGroupErrorClass);
             $jsInputName = Json::encode($inputName);
-            $jsFormId = Json::encode($this->getFormId());
+            $jsScope = Json::encode($this->getCurrentVueScope());
             $result->withAttributes([
-                'v-bind:class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsFormId)}",
+                'v-bind:class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsScope)}",
             ]);
         }
 
@@ -430,6 +445,49 @@ class Form extends BaseForm
     public function setFormId($formId)
     {
         $this->formId = $formId;
+        return $this;
+    }
+
+    /**
+     * @param string|null $scope
+     * @return static $this
+     */
+    public function beginVueScope($scope)
+    {
+        array_push($this->vueScopes, $scope);
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCurrentVueScope()
+    {
+        return count($this->vueScopes) ? end($this->vueScopes) : null;
+    }
+
+    /**
+     * @param string|null|false $checkScope
+     * @return static $this
+     * @throws \LogicException
+     */
+    public function endVueScope($checkScope = false)
+    {
+        $currentScope = array_pop($this->vueScopes);
+        if ($checkScope !== false && $checkScope !== $currentScope) {
+            $checkScope = $checkScope === null ? 'NULL' : $checkScope;
+            $currentScope = $currentScope === null ? 'NULL' : $currentScope;
+            throw new \LogicException("Cannot end the '$checkScope' Vue scope, because current scope is '$currentScope'.");
+        }
+        return $this;
+    }
+
+    /**
+     * @return static $this
+     */
+    public function clearVueScopes()
+    {
+        $this->vueScopes = [];
         return $this;
     }
 
@@ -489,5 +547,19 @@ class Form extends BaseForm
     public function getParsedRules()
     {
         return $this->parsedRules;
+    }
+
+    /**
+     * Returns empty string so you can easily use it in template, e.g.:
+     *
+     * ```
+     *  {{ F::setRequest($request)->beginVueScope('some-scope') }}
+     * ```
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return '';
     }
 }
