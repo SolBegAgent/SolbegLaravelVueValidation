@@ -249,7 +249,8 @@ class Form extends BaseForm
         }
 
         if (!isset($optionAttributes['v-for'])) {
-            $optionAttributes['v-for'] = "(id, name) in $dictionary";
+            $vForParams = version_compare(ServiceProvider::$vueVersion, 2, '>=') ? 'name, id' : 'id, name';
+            $optionAttributes['v-for'] = "($vForParams) in $dictionary";
         }
         if (!isset($optionAttributes['v-bind:value']) && !isset($optionAttributes[':value'])) {
             $optionAttributes['v-bind:value'] = 'id';

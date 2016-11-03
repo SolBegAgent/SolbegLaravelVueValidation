@@ -16,6 +16,11 @@ class ServiceProvider extends BaseServiceProvider
     const SERVICE_CONVERTER = 'vue-validation::converter';
 
     /**
+     * @var int|string
+     */
+    public static $vueVersion = 2;
+
+    /**
      * @inheritdoc
      */
     protected $defer = true;
