@@ -8,14 +8,15 @@
         messages: {},
 
         init: function (errorMessages) {
-            var field, i, cnt;
-
             this.messages = {};
-            errorMessages = errorMessages || [];
+            this.addMany(errorMessages);
+        },
 
+        addMany: function (errorMessages) {
+            var field, i, cnt;
+            errorMessages = errorMessages || [];
             for (i = 0, cnt = errorMessages.length; i < cnt; ++i) {
-                field = errorMessages[i][0];
-                this.add(field, errorMessages[i].slice(1));
+                this.add(errorMessages[i][0], errorMessages[i].slice(1));
             }
         },
 
@@ -86,6 +87,11 @@
         },
 
         extendValidator: function ($validator, errorMessages) {
+            if ($validator._getErrorMessagesBag) {
+                $validator._getErrorMessagesBag().addMany(errorMessages);
+                return;
+            }
+
             var thisPlugin = this,
                 parentMessageFormatter = $validator._formatErrorMessage,
                 parentTestMethod = $validator._test,
@@ -154,11 +160,12 @@
             var thisPlugin = this;
             return {
                 bind: function () {
-                    var vueObj = this.vm,
-                        form = this.el,
-                        props = thisPlugin.parseExpression(this.expression) || {};
+                    var vueObj = this === global ? arguments[2].context : this.vm, // capability with Vue v1 & v2
+                        form = this === global ? arguments[0] : this.el, // capability with Vue v1 & v2
+                        expression = this === global ? arguments[1].expression : this.expression, // capability with Vue v1 & v2
+                        props = thisPlugin.parseExpression(expression) || {};
 
-                    thisPlugin.extendValidator(this.vm.$validator, props.messages || []);
+                    thisPlugin.extendValidator(vueObj.$validator, props.messages || []);
                     vueObj.$nextTick(function () {
                         var scope = form.dataset.scope || undefined;
                         thisPlugin.fillErrors(vueObj, props.errors || {}, scope);
@@ -171,9 +178,14 @@
             var thisPlugin = this;
             return {
                 bind: function () {
-                    var field = (this.el.dataset && this.el.dataset.as) || this.el.name;
-                    var messages = thisPlugin.parseExpression(this.expression) || {};
-                    this.vm.$validator._getErrorMessagesBag().add(field, messages || []);
+                    var element = this === global ? arguments[0] : this.el, // capability with Vue v1 & v2
+                        expression = this === global ? arguments[1].expression : this.expression, // capability with Vue v1 & v2
+                        vueObj = this === global ? arguments[2].context : this.vm, // capability with Vue v1 & v2
+                        field = (element.dataset && element.dataset.as) || element.name,
+                        messages = thisPlugin.parseExpression(expression) || {};
+
+                    thisPlugin.extendValidator(vueObj.$validator);
+                    vueObj.$validator._getErrorMessagesBag().add(field, messages || []);
                 }
             };
         },
@@ -182,19 +194,23 @@
             var thisPlugin = this;
             return {
                 bind: function () {
-                    var element = this.el;
-                    var error = this.expression || null;
+                    var element = this === global ? arguments[0] : this.el; // capability with Vue v1 & v2
+                    var error = (this === global ? arguments[1].expression : this.expression) || null; // capability with Vue v1 & v2
+                    var vueObj = this === global ? arguments[2].context : this.vm; // capability with Vue v1 & v2
 
                     if (!error) {
                         return;
                     }
 
-                    this.vm.$nextTick(function () {
-                        this.$nextTick(function () { // double $nextTick to prevent clearing errors at once after binding
+                    error = thisPlugin.parseExpression(error) || error;
+
+                    thisPlugin.extendValidator(vueObj.$validator);
+                    vueObj.$nextTick(function () {
+                        vueObj.$nextTick(function () { // double $nextTick to prevent clearing errors at once after binding
                             var scope = element.dataset.scope || (element.form && element.form.dataset.scope) || undefined,
                                 errors = {};
                             errors[element.name] = error;
-                            thisPlugin.fillErrors(this, errors, scope);
+                            thisPlugin.fillErrors(vueObj, errors, scope);
                         });
                     });
                 }

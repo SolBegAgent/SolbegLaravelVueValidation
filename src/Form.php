@@ -12,12 +12,13 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\ViewErrorBag;
 
 use Solbeg\VueValidation\Helpers\IdGenerator;
-use Solbeg\VueValidation\Helpers\Json;
 
 /**
  * Class Form
  *
  * @author Alexey Sejnov <alexey.sejnov@solbeg.com>
+ *
+ * @property HtmlBuilder $html
  */
 class Form extends BaseForm
 {
@@ -138,7 +139,7 @@ class Form extends BaseForm
             throw new \LogicException('Cannot render Vue JS code until form ID will be defined.');
         }
 
-        $jsOptions = Json::encode(array_merge([
+        $jsOptions = $this->html->encodeJs(array_merge([
             'el' => "#$formId",
         ], $options));
         return "new Vue($jsOptions);";
@@ -288,7 +289,7 @@ class Form extends BaseForm
                 ], $rules)));
                 $this->addParsedRules($rules);
 
-                $options['v-validation-messages'] = Json::encode(array_merge(
+                $options['v-validation-messages'] = $this->html->encodeJs(array_merge(
                     isset($options['v-validation-messages']) ? $options['v-validation-messages'] : [],
                     $this->generateVueMessages($rules)
                 ));
@@ -302,7 +303,7 @@ class Form extends BaseForm
                 $attributeName = $this->getRulesParser()->convertInputNameToAttribute($name);
                 $error = ($this->getRequest()->getSession()->get('errors') ?: new ViewErrorBag)->first($attributeName);
                 if ($error) {
-                    $options['v-validation-error'] = $error;
+                    $options['v-validation-error'] = $this->html->encodeJs($error);
                 }
             }
         }
@@ -345,8 +346,8 @@ class Form extends BaseForm
      */
     public function vueError($name, array $attributes = [])
     {
-        $jsEncodedName = Json::encode($name);
-        $jsScope = Json::encode($this->getCurrentVueScope());
+        $jsEncodedName = $this->html->encodeJs($name);
+        $jsScope = $this->html->encodeJs($this->getCurrentVueScope());
         $label = "{{ errors.first($jsEncodedName, $jsScope) }}";
 
         if (!array_key_exists('v-show', $attributes)) {
@@ -388,9 +389,9 @@ class Form extends BaseForm
         /* @var $result \Bootstrapper\ControlGroup */
 
         if (($addVueClass === null && $this->getRequest()) || $addVueClass) {
-            $jsErrorClass = Json::encode(self::$controlGroupErrorClass);
-            $jsInputName = Json::encode($inputName);
-            $jsScope = Json::encode($this->getCurrentVueScope());
+            $jsErrorClass = $this->html->encodeJs(self::$controlGroupErrorClass);
+            $jsInputName = $this->html->encodeJs($inputName);
+            $jsScope = $this->html->encodeJs($this->getCurrentVueScope());
             $result->withAttributes([
                 'v-bind:class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsScope)}",
             ]);
