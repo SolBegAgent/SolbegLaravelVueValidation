@@ -12,6 +12,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\ViewErrorBag;
 
 use Solbeg\VueValidation\Helpers\IdGenerator;
+use Solbeg\VueValidation\Helpers\JsExpression;
 
 /**
  * Class Form
@@ -86,8 +87,8 @@ class Form extends BaseForm
             $options['data-scope'] = $options['id'];
             $this->beginVueScope($options['id']);
 
-            if (!isset($options['v-form-valdation'])) {
-                $options['v-form-validation'] = true;
+            if (!isset($options['v-form-validation'])) {
+                $options['v-form-validation'] = $this->html->encodeJs(['prevent-submit' => true]);
             }
         }
 

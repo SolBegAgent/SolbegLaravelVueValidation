@@ -127,7 +127,8 @@
             }
 
             var validator = this.currentValidator,
-                selector = 'input[name="' + field + '"]',
+                nameSelector = '[name="' + field + '"]',
+                selector = ['input' + nameSelector, 'textarea' + nameSelector, 'select' + nameSelector].join(','),
                 input = validator && validator.$vm && validator.$vm.$el && validator.$vm.$el.querySelector(selector);
 
             return !! (input && global.String(value) === input.value);
@@ -156,6 +157,46 @@
             }
         },
 
+        validateFormOnSubmit: function (vueObj, form, event) {
+            vueObj.$validator.validateAll(form.dataset.scope);
+            if (!vueObj.$validator.errorBag.any(form.dataset.scope)) {
+                return;
+            }
+
+            event.preventDefault();
+            this.focusToFailedElement(vueObj, form);
+        },
+
+        focusToFailedElement: function (vueObj, form) {
+            var formScope = form.dataset.scope,
+                errors = vueObj.$validator.errorBag && vueObj.$validator.errorBag.errors;
+            if (!errors) {
+                return;
+            }
+
+            var error, i;
+            for (i in errors) {
+                if (!formScope || errors[i].scope === formScope) {
+                    error = errors[i];
+                    break;
+                }
+            }
+
+            if (!error || !error.field) {
+                return;
+            }
+
+            try {
+                var selector = '[name="' + error.field + '"]',
+                    fullSelector = ['input' + selector, 'textarea' + selector, 'select' + selector].join(','),
+                    input = vueObj.$el && vueObj.$el.querySelector(fullSelector);
+                input && input.focus && input.focus();
+                input && input.select && input.select();
+            } catch (err) {
+                global.console && global.console.error && global.console.error(err);
+            }
+        },
+
         formValidationDirective: function () {
             var thisPlugin = this;
             return {
@@ -163,13 +204,18 @@
                     var vueObj = this === global ? arguments[2].context : this.vm, // capability with Vue v1 & v2
                         form = this === global ? arguments[0] : this.el, // capability with Vue v1 & v2
                         expression = this === global ? arguments[1].expression : this.expression, // capability with Vue v1 & v2
-                        props = thisPlugin.parseExpression(expression) || {};
+                        props = thisPlugin.parseExpression(expression) || {},
+                        modifiers = (this === global ? arguments[1].modifiers : this.modifiers) || {};
 
                     thisPlugin.extendValidator(vueObj.$validator, props.messages || []);
                     vueObj.$nextTick(function () {
                         var scope = form.dataset.scope || undefined;
                         thisPlugin.fillErrors(vueObj, props.errors || {}, scope);
                     });
+
+                    if (props['prevent-submit'] || modifiers['prevent-submit']) {
+                        form.addEventListener('submit', thisPlugin.validateFormOnSubmit.bind(thisPlugin, vueObj, form));
+                    }
                 }
             };
         },
