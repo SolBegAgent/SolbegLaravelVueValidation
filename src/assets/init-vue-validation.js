@@ -164,11 +164,11 @@
             }
 
             event.preventDefault();
-            this.focusToFailedElement(vueObj, form);
+            this.focusToFailedElement(vueObj, form, form.dataset.scope);
         },
 
-        focusToFailedElement: function (vueObj, form) {
-            var formScope = form.dataset.scope,
+        focusToFailedElement: function (vueObj, form, scope) {
+            var formScope = scope || form.dataset.scope,
                 errors = vueObj.$validator.errorBag && vueObj.$validator.errorBag.errors;
             if (!errors) {
                 return;
@@ -189,7 +189,7 @@
             try {
                 var selector = '[name="' + error.field + '"]',
                     fullSelector = ['input' + selector, 'textarea' + selector, 'select' + selector].join(','),
-                    input = vueObj.$el && vueObj.$el.querySelector(fullSelector);
+                    input = form.querySelector(fullSelector);
                 input && input.focus && input.focus();
                 input && input.select && input.select();
             } catch (err) {
