@@ -227,11 +227,10 @@
                     var element = this === global ? arguments[0] : this.el, // capability with Vue v1 & v2
                         expression = this === global ? arguments[1].expression : this.expression, // capability with Vue v1 & v2
                         vueObj = this === global ? arguments[2].context : this.vm, // capability with Vue v1 & v2
-                        field = (element.dataset && element.dataset.as) || element.name,
                         messages = thisPlugin.parseExpression(expression) || {};
 
                     thisPlugin.extendValidator(vueObj.$validator);
-                    vueObj.$validator._getErrorMessagesBag().add(field, messages || []);
+                    element.name && vueObj.$validator._getErrorMessagesBag().add(element.name, messages || []);
                 }
             };
         },
