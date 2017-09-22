@@ -82,7 +82,7 @@ class Factory implements Contracts\ConverterFactory
             return $this->inline($config, $inputName, $attribute, $message, $rule, $params, $attributeOptions);
         }
 
-        $converter = $this->getContainer()->make($config, [
+        $converter = $this->getContainer()->makeWith($config, [
             'inputName' => $inputName,
             'attribute' => $attribute,
             'message' => $message,
