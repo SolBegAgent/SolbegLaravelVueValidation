@@ -5,7 +5,6 @@ namespace Solbeg\VueValidation\Converter;
 use Illuminate\Support\Str;
 
 use Solbeg\VueValidation\Contracts;
-use Solbeg\VueValidation\Wrappers\ValidatorWrapper;
 
 /**
  * Class AbstractRule
@@ -134,7 +133,7 @@ abstract class AbstractRule implements Contracts\RuleConverter
      */
     public function isNumericAttribute()
     {
-        return boolval($this->getAttributeOptions() & self::OPTION_ATTRIBUTE_IS_NUMERIC);
+        return (bool)($this->getAttributeOptions() & self::OPTION_ATTRIBUTE_IS_NUMERIC);
     }
 
     /**
@@ -142,7 +141,7 @@ abstract class AbstractRule implements Contracts\RuleConverter
      */
     public function isFileAttribute()
     {
-        return boolval($this->getAttributeOptions() & self::OPTION_ATTRIBUTE_IS_FILE);
+        return (bool)($this->getAttributeOptions() & self::OPTION_ATTRIBUTE_IS_FILE);
     }
 
     /**

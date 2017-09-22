@@ -18,6 +18,7 @@ class RegexRule extends AbstractRule
 
     /**
      * @inheritdoc
+     * @throws \LogicException
      */
     public function getVueRules()
     {
@@ -51,6 +52,7 @@ class RegexRule extends AbstractRule
 
     /**
      * @return array|false
+     * @throws \LogicException
      */
     protected function getJsRegexp()
     {
@@ -61,7 +63,7 @@ class RegexRule extends AbstractRule
         $params = $this->requireLaravelParams(1);
         $jsRegexp = JsRegexpConverter::convert($params[0], true);
 
-        if (array_key_exists(1, $jsRegexp) && !strlen($jsRegexp[1])) {
+        if (array_key_exists(1, $jsRegexp) && $jsRegexp[1] === '') {
             unset($jsRegexp[1]);
         }
 

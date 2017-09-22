@@ -16,6 +16,7 @@ class ConfirmedRule extends AbstractRule
 
     /**
      * @inheritdoc
+     * @throws \LogicException
      */
     public function getVueRules()
     {
@@ -41,7 +42,7 @@ class ConfirmedRule extends AbstractRule
      */
     public function isValid()
     {
-        return $this->getLaravelParams() || $this->isValidInputName($this->getInputName());
+        return $this->getLaravelParams() || $this->isValidInputName();
     }
 
     /**
@@ -60,7 +61,7 @@ class ConfirmedRule extends AbstractRule
     {
         $inputName = $this->getInputName();
 
-        if (!$this->isValidInputName($inputName)) {
+        if (!$this->isValidInputName()) {
             throw new \LogicException("Cannot generate target input name for array input: '$inputName'.");
         } elseif (preg_match('/\[[^\]]+\]$/', $inputName)) {
             return preg_replace_callback('/\[([^\]]+)\]$/', function (array $matches) {
@@ -72,10 +73,9 @@ class ConfirmedRule extends AbstractRule
     }
 
     /**
-     * @param string $inputName
      * @return bool
      */
-    protected function isValidInputName($inputName)
+    protected function isValidInputName()
     {
         return !$this->isArrayAttribute();
     }

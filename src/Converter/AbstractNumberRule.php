@@ -16,6 +16,7 @@ abstract class AbstractNumberRule extends AbstractRule
 
     /**
      * @inheritdoc
+     * @throws \LogicException
      */
     public function getVueRules()
     {

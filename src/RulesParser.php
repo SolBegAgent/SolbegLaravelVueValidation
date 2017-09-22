@@ -79,6 +79,7 @@ class RulesParser
 
     /**
      * @return Validator
+     * @throws \LogicException
      */
     public function getValidator()
     {
@@ -96,6 +97,7 @@ class RulesParser
     /**
      * @param string $inputName
      * @return \Solbeg\VueValidation\Contracts\RuleConverter[]
+     * @throws \LogicException
      */
     public function generateVueRules($inputName)
     {
@@ -124,6 +126,7 @@ class RulesParser
     /**
      * @param string $inputName
      * @return array[]
+     * @throws \LogicException
      */
     protected function parseLaravelRules($inputName)
     {
@@ -144,6 +147,7 @@ class RulesParser
     /**
      * @param string $inputName
      * @return string
+     * @throws \LogicException
      */
     public function getAttributeDisplayName($inputName)
     {
@@ -185,6 +189,7 @@ class RulesParser
     /**
      * @param array $laravelRules
      * @return bool
+     * @throws \LogicException
      */
     protected function containsNumericRule(array $laravelRules)
     {
@@ -197,6 +202,7 @@ class RulesParser
     /**
      * @param array $laravelRules
      * @return bool
+     * @throws \LogicException
      */
     protected function containsFileRule(array $laravelRules)
     {
@@ -209,6 +215,7 @@ class RulesParser
     /**
      * @param array $laravelRules
      * @return integer
+     * @throws \LogicException
      */
     protected function detectAttributeOptions(array $laravelRules)
     {

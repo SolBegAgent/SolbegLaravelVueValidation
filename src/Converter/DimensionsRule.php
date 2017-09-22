@@ -11,6 +11,7 @@ class DimensionsRule extends AbstractRule
 {
     /**
      * @inheritdoc
+     * @throws \BadMethodCallException
      */
     public function getVueRules()
     {

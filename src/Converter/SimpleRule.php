@@ -25,7 +25,7 @@ class SimpleRule extends AbstractRule
     public function isValid()
     {
         foreach ($this->getLaravelParams() as $param) {
-            if (!is_scalar($param) && !is_null($param)) {
+            if (!is_scalar($param) && $param !== null) {
                 return false;
             } elseif (strpos($param, '|') !== false || strpos($param, ',') !== false) {
                 return false;

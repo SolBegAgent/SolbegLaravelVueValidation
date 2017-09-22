@@ -67,6 +67,7 @@ class Factory implements Contracts\ConverterFactory
 
     /**
      * @inheritdoc
+     * @throws \Exception
      */
     public function make($inputName, $attribute, $message, $rule, array $params = [], $attributeOptions = 0)
     {

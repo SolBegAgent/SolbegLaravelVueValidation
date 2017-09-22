@@ -2,6 +2,7 @@
 
 namespace Solbeg\VueValidation\Wrappers;
 
+use Illuminate\Validation\ValidationRuleParser;
 use Illuminate\Validation\Validator;
 
 /**
@@ -43,7 +44,7 @@ class ValidatorWrapper extends Validator
 
         $result = [];
         foreach ($rules as $rule) {
-            list($rule, $params) = $validator->parseRule($rule);
+            list($rule, $params) = ValidationRuleParser::parse($rule);
             if ($rule != '') {
                 $result[] = [$rule, static::normalizeRuleParams($validator, $rule, $params)];
             }
@@ -98,7 +99,7 @@ class ValidatorWrapper extends Validator
     public static function generateErrorMessage(Validator $validator, $attribute, $rule, array $params = [])
     {
         $message = $validator->getMessage($attribute, $rule);
-        return $validator->doReplacements($message, $attribute, $rule, $params);
+        return $validator->makeReplacements($message, $attribute, $rule, $params);
     }
 
     /**
@@ -109,6 +110,6 @@ class ValidatorWrapper extends Validator
      */
     public static function generateAttributeDisplayName(Validator $validator, $attribute)
     {
-        return $validator->getAttribute($attribute);
+        return $validator->getDisplayableAttribute($attribute);
     }
 }
