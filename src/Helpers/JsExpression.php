@@ -38,8 +38,9 @@ class JsExpression implements Jsonable
 
     /**
      * @return string
+     * @internal param int $options
      */
-    public function toJson()
+    public function toJson($options = 0)
     {
         return (string) $this->getExpression();
     }

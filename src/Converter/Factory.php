@@ -81,7 +81,10 @@ class Factory implements Contracts\ConverterFactory
         } elseif ($config instanceof \Closure) {
             return $this->inline($config, $inputName, $attribute, $message, $rule, $params, $attributeOptions);
         }
-
+        /*
+         * In the laravel 5.4 'make' method no longer accepts a second array of parameters. The 'makeWith' method
+          allows functionality similar to old "make" functionality
+         */
         $converter = $this->getContainer()->makeWith($config, [
             'inputName' => $inputName,
             'attribute' => $attribute,

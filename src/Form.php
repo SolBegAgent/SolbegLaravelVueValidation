@@ -418,13 +418,11 @@ class Form extends BaseForm
     {
         if ($request !== null && !is_a($request, FormRequest::class, true)) {
             if (is_string($request)) {
-                $requestClass = !is_object($request)
-                    ? $request
-                    : get_class($request);
+                $requestClass = $request;
             } else {
-                $requestClass = !is_object($request)
-                    ? gettype($request)
-                    : get_class($request);
+                $requestClass = is_object($request)
+                    ? get_class($request)
+                    : gettype($request);
             }
             throw new \InvalidArgumentException("Invalid request type: '$requestClass', it must be an instance of " . FormRequest::class . '.');
         }
@@ -520,6 +518,10 @@ class Form extends BaseForm
     public function getRulesParser()
     {
         if ($this->rulesParser === null) {
+            /*
+             * In the laravel 5.4 'make' method no longer accepts a second array of parameters. The 'makeWith' method
+                allows functionality similar to old "make" functionality
+            */
             $this->rulesParser = $this->getContainer()->makeWith(RulesParser::class, [
                 'request' => $this->getRequest(),
             ]);
