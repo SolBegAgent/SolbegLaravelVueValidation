@@ -23,7 +23,7 @@ class JsRegexpConverter
     public static function convert($phpRegexp, $asArray = false)
     {
         $pattern = preg_replace('/\\\\x\{?([0-9a-fA-F]+)\}?/', '\u$1', $phpRegexp);
-        $deliminator = substr($pattern, 0, 1);
+        $deliminator = $pattern[0];
         $pos = strrpos($pattern, $deliminator, 1);
         $flag = substr($pattern, $pos + 1);
 

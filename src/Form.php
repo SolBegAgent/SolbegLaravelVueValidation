@@ -33,7 +33,7 @@ class Form extends BaseForm
      *
      * @var FormRequest|null
      */
-    private $request;
+    protected $request;
 
     /**
      * @var Container
@@ -75,6 +75,7 @@ class Form extends BaseForm
     /**
      * @param array $options
      * @return \Illuminate\Support\HtmlString
+     * @throws \InvalidArgumentException
      */
     public function open(array $options = [])
     {
@@ -102,6 +103,8 @@ class Form extends BaseForm
     /**
      * @param array|boolean $vueOptions
      * @inheritdoc
+     * @throws \InvalidArgumentException
+     * @throws \LogicException
      */
     public function close($vueOptions = true)
     {
@@ -149,20 +152,10 @@ class Form extends BaseForm
     /**
      * @param string|FormRequest $request
      * @param array $options
-     * @return \Illuminate\Support\HtmlString
-     */
-    public function request($request, $options = [])
-    {
-        $this->setRequest($request);
-        return $this->open($options);
-    }
-
-    /**
-     * @param string|FormRequest $request
-     * @param array $options
      * @return string
+     * @throws \InvalidArgumentException
      */
-    public function inlineRequest($request, $options = [])
+    public function inlineRequest($request, array $options = [])
     {
         $this->setRequest($request);
         return $this->inline($options);
@@ -172,8 +165,9 @@ class Form extends BaseForm
      * @param string|FormRequest $request
      * @param array $options
      * @return string
+     * @throws \InvalidArgumentException
      */
-    public function horizontalRequest($request, $options = [])
+    public function horizontalRequest($request, array $options = [])
     {
         $this->setRequest($request);
         return $this->horizontal($options);
@@ -184,8 +178,9 @@ class Form extends BaseForm
      * @param string|FormRequest $request
      * @param array $options
      * @return string
+     * @throws \InvalidArgumentException
      */
-    public function inlineModelRequest($model, $request, $options = [])
+    public function inlineModelRequest($model, $request, array $options = [])
     {
         $this->setRequest($request);
         return $this->inlineModel($model, $options);
@@ -196,8 +191,9 @@ class Form extends BaseForm
      * @param string|FormRequest $request
      * @param array $options
      * @return string
+     * @throws \InvalidArgumentException
      */
-    public function horizontalModelRequest($model, $request, $options = [])
+    public function horizontalModelRequest($model, $request, array $options = [])
     {
         $this->setRequest($request);
         return $this->horizontalModel($model, $options);
@@ -215,10 +211,10 @@ class Form extends BaseForm
     /**
      * @inheritdoc
      */
-    public function select($name, $list = [], $selected = null, $attributes = [])
+    public function select($name, $list = [], $selected = null, array $attributes = [], array $optionsAttributes = [])
     {
         $attributes = $this->prepareVueOptions($name, $attributes, __FUNCTION__);
-        return parent::select($name, $list, $selected, $attributes);
+        return parent::select($name, $list, $selected, $attributes, $optionsAttributes);
     }
 
     /**
@@ -229,7 +225,7 @@ class Form extends BaseForm
      * @param string $optionContent
      * @return \Illuminate\Support\HtmlString
      */
-    public function vueSelect($name, $dictionary, $selectAttributes = [], $optionAttributes = [], $optionContent = '{{ name }}')
+    public function vueSelect($name, $dictionary, $selectAttributes = [], array $optionAttributes = [], $optionContent = '{{ name }}')
     {
         $selectAttributes = $this->prepareVueOptions($name, $selectAttributes, 'select');
 
@@ -421,9 +417,13 @@ class Form extends BaseForm
     public function setRequest($request)
     {
         if ($request !== null && !is_a($request, FormRequest::class, true)) {
-            $requestClass = !is_object($request)
-                ? is_string($request) ? $request : gettype($request)
-                : get_class($request);
+            if (is_string($request)) {
+                $requestClass = $request;
+            } else {
+                $requestClass = is_object($request)
+                    ? get_class($request)
+                    : gettype($request);
+            }
             throw new \InvalidArgumentException("Invalid request type: '$requestClass', it must be an instance of " . FormRequest::class . '.');
         }
 
@@ -457,7 +457,7 @@ class Form extends BaseForm
      */
     public function beginVueScope($scope)
     {
-        array_push($this->vueScopes, $scope);
+        $this->vueScopes[] = $scope;
         return $this;
     }
 
@@ -470,7 +470,7 @@ class Form extends BaseForm
     }
 
     /**
-     * @param string|null|false $checkScope
+     * @param bool|false|null|string $checkScope
      * @return static $this
      * @throws \LogicException
      */
@@ -518,7 +518,11 @@ class Form extends BaseForm
     public function getRulesParser()
     {
         if ($this->rulesParser === null) {
-            $this->rulesParser = $this->getContainer()->make(RulesParser::class, [
+            /*
+             * In the laravel 5.4 'make' method no longer accepts a second array of parameters. The 'makeWith' method
+                allows functionality similar to old "make" functionality
+            */
+            $this->rulesParser = $this->getContainer()->makeWith(RulesParser::class, [
                 'request' => $this->getRequest(),
             ]);
         }

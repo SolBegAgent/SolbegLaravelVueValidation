@@ -53,7 +53,7 @@ class ServiceProvider extends BaseServiceProvider
                 $app->make(self::SERVICE_HTML),
                 $app->make('url'),
                 $app->make('view'),
-                $app['session.store']->getToken()
+                $app['session.store']->token()
             );
             $form->setSessionStore($app['session.store']);
             $form->setContainer($app);

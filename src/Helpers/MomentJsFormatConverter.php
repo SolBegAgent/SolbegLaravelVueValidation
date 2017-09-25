@@ -55,8 +55,10 @@ class MomentJsFormatConverter
     ];
 
     /**
-     * @param string $phpFormat
+     * @param $phpDateFormat
      * @return string
+     * @throws \Exception
+     * @internal param string $phpFormat
      */
     public static function convert($phpDateFormat)
     {
@@ -80,7 +82,7 @@ class MomentJsFormatConverter
     {
         foreach (static::getInvalidChars() as $char) {
             if (mb_strpos($str, $char, 0, 'UTF-8') !== false) {
-                throw new \Exception("Cannot convert PHP date format '$str' to MomentJs format, because the last has not an equivalent for '$char'.");
+                throw new \RuntimeException("Cannot convert PHP date format '$str' to MomentJs format, because the last has not an equivalent for '$char'.");
             }
         }
         return strtr($str, self::$replacements);

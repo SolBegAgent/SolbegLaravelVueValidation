@@ -2,8 +2,6 @@
 
 namespace Solbeg\VueValidation\Converter;
 
-use Solbeg\VueValidation\Wrappers\ValidatorWrapper;
-
 /**
  * Class CompareDateRule
  *
@@ -13,6 +11,7 @@ class CompareDateRule extends SimpleRule
 {
     /**
      * @inheritdoc
+     * @throws \LogicException
      */
     public function isValid()
     {

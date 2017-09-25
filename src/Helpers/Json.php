@@ -32,7 +32,7 @@ class Json
         }
 
         $expressions = [];
-        $data = static::processData($data, $expressions, uniqid('', true), $options);
+        $data = static::processData($data, $expressions, uniqid('', true));
 
         $json = json_encode($data, $options);
         return $expressions ? strtr($json, $expressions) : $json;
@@ -42,10 +42,9 @@ class Json
      * @param mixed $data
      * @param array $expressions
      * @param string $expPrefix
-     * @param integer $options
      * @return mixed
      */
-    protected static function processData($data, &$expressions = [], $expPrefix, $options)
+    protected static function processData($data, &$expressions = [], $expPrefix)
     {
         if (is_object($data)) {
             if ($data instanceof Collection) {
@@ -60,7 +59,7 @@ class Json
                 $data = (array) $data;
             } elseif ($data instanceof Jsonable) {
                 $token = "!{[$expPrefix=". count($expressions) . ']}!';
-                $expressions['"' . $token . '"'] = $data->toJson($options);
+                $expressions['"' . $token . '"'] = $data->toJson();
                 return $token;
             } else {
                 $result = [];
@@ -78,7 +77,7 @@ class Json
         if (is_array($data)) {
             foreach ($data as $key => $value) {
                 if (is_array($value) || is_object($value)) {
-                    $data[$key] = static::processData($value, $expressions, $expPrefix, $options);
+                    $data[$key] = static::processData($value, $expressions, $expPrefix);
                 }
             }
         }

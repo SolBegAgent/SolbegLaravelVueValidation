@@ -19,6 +19,7 @@ class SizeRule extends AbstractSizeRule
 
     /**
      * @return array
+     * @throws \LogicException
      */
     protected function generateNumericVueRules()
     {

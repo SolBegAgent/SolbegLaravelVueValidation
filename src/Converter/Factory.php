@@ -67,6 +67,7 @@ class Factory implements Contracts\ConverterFactory
 
     /**
      * @inheritdoc
+     * @throws \Exception
      */
     public function make($inputName, $attribute, $message, $rule, array $params = [], $attributeOptions = 0)
     {
@@ -80,8 +81,11 @@ class Factory implements Contracts\ConverterFactory
         } elseif ($config instanceof \Closure) {
             return $this->inline($config, $inputName, $attribute, $message, $rule, $params, $attributeOptions);
         }
-
-        $converter = $this->getContainer()->make($config, [
+        /*
+         * In the laravel 5.4 'make' method no longer accepts a second array of parameters. The 'makeWith' method
+          allows functionality similar to old "make" functionality
+         */
+        $converter = $this->getContainer()->makeWith($config, [
             'inputName' => $inputName,
             'attribute' => $attribute,
             'message' => $message,

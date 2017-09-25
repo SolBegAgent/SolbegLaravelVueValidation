@@ -35,7 +35,7 @@ class FormRequestWrapper extends FormRequest
         $request = $requestClass::createFromBase($sourceRequest);
 
         if ($session = $sourceRequest->getSession()) {
-            $request->setSession($session);
+            $request->setLaravelSession($session);
         }
 
         $request->setUserResolver($sourceRequest->getUserResolver());

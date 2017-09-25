@@ -39,6 +39,8 @@ class InlineRule extends AbstractRule
 
     /**
      * @inheritdoc
+     * @throws \BadMethodCallException
+     * @throws \BadFunctionCallException
      */
     public function getVueRules()
     {
@@ -72,6 +74,7 @@ class InlineRule extends AbstractRule
 
     /**
      * @return array
+     * @throws \BadFunctionCallException
      */
     public function invokeCallback()
     {
@@ -84,7 +87,7 @@ class InlineRule extends AbstractRule
 
         $result = call_user_func($this->callback, $rule, $params, $this);
         if ($result !== false && !is_array($result)) {
-            throw new \BadFunctionCallException("Invalid result of inline converter. It must be FALSE or an array with Vue rules.");
+            throw new \BadFunctionCallException('Invalid result of inline converter. It must be FALSE or an array with Vue rules.');
         }
         return $this->callbackResult = $result;
     }

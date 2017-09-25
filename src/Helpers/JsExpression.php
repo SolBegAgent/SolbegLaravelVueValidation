@@ -37,8 +37,8 @@ class JsExpression implements Jsonable
     }
 
     /**
-     * @param int $options
      * @return string
+     * @internal param int $options
      */
     public function toJson($options = 0)
     {

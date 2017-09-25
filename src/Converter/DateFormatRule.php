@@ -13,6 +13,7 @@ class DateFormatRule extends AbstractRule
 {
     /**
      * @inheritdoc
+     * @throws \Exception
      */
     public function getVueRules()
     {
@@ -22,6 +23,7 @@ class DateFormatRule extends AbstractRule
 
     /**
      * @inheritdoc
+     * @throws \LogicException
      */
     public function isValid()
     {
@@ -43,6 +45,8 @@ class DateFormatRule extends AbstractRule
 
     /**
      * @return array
+     * @throws \Exception
+     * @throws \LogicException
      */
     protected function getVueDateParams()
     {
@@ -62,7 +66,7 @@ class DateFormatRule extends AbstractRule
     protected function convertDateFormat($phpFormat)
     {
         $result = MomentJsFormatConverter::convert($phpFormat);
-        if (!is_string($result) || !strlen($result) || strpos($result, '|') !== false || strpos($result, ',') !== false) {
+        if (!is_string($result) || $result === '' || strpos($result, '|') !== false || strpos($result, ',') !== false) {
             return false;
         }
         return $result;
