@@ -211,7 +211,7 @@ class Form extends BaseForm
     /**
      * @inheritdoc
      */
-    public function select($name, $list = [], $selected = null, array $attributes = [], array $optionsAttributes = [])
+    public function select($name, $list = [], $selected = null, array $attributes = [], array $optionsAttributes = [], array $cap = [])
     {
         $attributes = $this->prepareVueOptions($name, $attributes, __FUNCTION__);
         return parent::select($name, $list, $selected, $attributes, $optionsAttributes);
