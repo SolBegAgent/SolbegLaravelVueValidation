@@ -3,7 +3,7 @@
 namespace Solbeg\VueValidation;
 
 use Bootstrapper\Form as BaseForm;
-use Bootstrapper\Facades\ControlGroup;
+use Bootstrapper\ControlGroup;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -12,7 +12,6 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\ViewErrorBag;
 
 use Solbeg\VueValidation\Helpers\IdGenerator;
-use Solbeg\VueValidation\Helpers\JsExpression;
 
 /**
  * Class Form
@@ -211,7 +210,7 @@ class Form extends BaseForm
     /**
      * @inheritdoc
      */
-    public function select($name, $list = [], $selected = null, array $attributes = [], array $optionsAttributes = [])
+    public function select($name, $list = [], $selected = null, array $attributes = [], array $optionsAttributes = [], array $cap = [])
     {
         $attributes = $this->prepareVueOptions($name, $attributes, __FUNCTION__);
         return parent::select($name, $list, $selected, $attributes, $optionsAttributes);
@@ -368,7 +367,7 @@ class Form extends BaseForm
      * @param int $controlSize The size of the form control
      * @param boolean|null $addVueClass
      * @return \Bootstrapper\ControlGroup
-     * @throws \Bootstrapper\Exceptions\ControlGroupException
+     * @throws \Bootstrapper\ControlGroupException
      */
     public function controlGroup($inputName, $label, $control, $help = null, $labelSize = null, $controlSize = null, $addVueClass = null)
     {
