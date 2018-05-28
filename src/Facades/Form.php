@@ -2,7 +2,7 @@
 
 namespace Solbeg\VueValidation\Facades;
 
-use Bootstrapper\FacadesForm as BaseFormFacade;
+use Solbeg\VueValidation\Bootstrapper\Facades\Form as BaseFormFacade;
 use Solbeg\VueValidation\ServiceProvider;
 
 /**
