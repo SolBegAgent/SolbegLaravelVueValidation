@@ -3,7 +3,7 @@
  * Bootstrapper generic facade
  */
 
-namespace Bootstrapper;
+namespace Solbeg\VueValidation\Bootstrapper\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

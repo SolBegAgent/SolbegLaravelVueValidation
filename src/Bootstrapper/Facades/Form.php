@@ -3,7 +3,7 @@
  * Bootstrapper Form facade
  */
 
-namespace Bootstrapper;
+namespace Solbeg\VueValidation\Bootstrapper\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Facade;
  * @package Bootstrapper\Facades
  * @see     Bootstrapper\Form
  */
-class FacadesForm extends Facade
+class Form extends Facade
 {
     const FORM_HORIZONTAL = 'form-horizontal';
     const FORM_INLINE = 'form-inline';
@@ -28,6 +28,6 @@ class FacadesForm extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'bootstrapper::form';
+        return 'solbeg::vue-validation::bootstrapper::form';
     }
 }

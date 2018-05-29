@@ -2,8 +2,8 @@
 
 namespace Solbeg\VueValidation;
 
-use Bootstrapper\Form as BaseForm;
-use Bootstrapper\ControlGroup;
+use Solbeg\VueValidation\Bootstrapper\Form as BaseForm;
+use Solbeg\VueValidation\Bootstrapper\Facades\ControlGroup;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -12,6 +12,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\ViewErrorBag;
 
 use Solbeg\VueValidation\Helpers\IdGenerator;
+use Solbeg\VueValidation\Helpers\JsExpression;
 
 /**
  * Class Form
@@ -112,8 +113,8 @@ class Form extends BaseForm
         $vueJs = $this->renderVueJs($vueOptions);
         if ($vueJs !== null) {
             $result = $this->toHtmlString(implode(PHP_EOL, [
-                (string) $result,
-                (string) $this->html->jsCode($vueJs),
+                    (string) $result,
+                    (string) $this->html->jsCode($vueJs),
             ]));
         }
 
@@ -143,7 +144,7 @@ class Form extends BaseForm
         }
 
         $jsOptions = $this->html->encodeJs(array_merge([
-            'el' => "#$formId",
+                'el' => "#$formId",
         ], $options));
         return "new Vue($jsOptions);";
     }
@@ -233,8 +234,8 @@ class Form extends BaseForm
             $selectAttributes['name'] = $name;
         }
         $selectAttributes['class'] = isset($selectAttributes['class']) ?
-            self::FORM_CONTROL . ' ' . $selectAttributes['class'] :
-            self::FORM_CONTROL;
+                self::FORM_CONTROL . ' ' . $selectAttributes['class'] :
+                self::FORM_CONTROL;
 
         $selectedValue = isset($selectAttributes['value']) ? $selectAttributes['value'] : null;
         unset($selectAttributes['value']);
@@ -255,9 +256,9 @@ class Form extends BaseForm
         $html[] = $this->toHtmlString('<option' . $this->html->attributes($optionAttributes) . ">$optionContent</option>");
 
         return $this->toHtmlString(implode('', [
-            '<select' . $this->html->attributes($selectAttributes) . '>',
-            implode('', $html),
-            '</select>',
+                '<select' . $this->html->attributes($selectAttributes) . '>',
+                implode('', $html),
+                '</select>',
         ]));
     }
 
@@ -281,13 +282,13 @@ class Form extends BaseForm
         if ($this->getRequest()) {
             if ($rules = $this->getRulesParser()->generateVueRules($name)) {
                 $options['data-rules'] = implode('|', array_filter(array_merge([
-                    isset($options['data-rules']) ? $options['data-rules'] : null,
+                        isset($options['data-rules']) ? $options['data-rules'] : null,
                 ], $rules)));
                 $this->addParsedRules($rules);
 
                 $options['v-validation-messages'] = $this->html->encodeJs(array_merge(
-                    isset($options['v-validation-messages']) ? $options['v-validation-messages'] : [],
-                    $this->generateVueMessages($rules)
+                        isset($options['v-validation-messages']) ? $options['v-validation-messages'] : [],
+                        $this->generateVueMessages($rules)
                 ));
             }
 
@@ -367,7 +368,7 @@ class Form extends BaseForm
      * @param int $controlSize The size of the form control
      * @param boolean|null $addVueClass
      * @return \Bootstrapper\ControlGroup
-     * @throws \Bootstrapper\ControlGroupException
+     * @throws \Bootstrapper\Exceptions\ControlGroupException
      */
     public function controlGroup($inputName, $label, $control, $help = null, $labelSize = null, $controlSize = null, $addVueClass = null)
     {
@@ -376,20 +377,20 @@ class Form extends BaseForm
         }
 
         $result = ControlGroup::generate(
-            $label,
-            $control,
-            $help,
-            $labelSize,
-            $controlSize
+                $label,
+                $control,
+                $help,
+                $labelSize,
+                $controlSize
         );
-        /* @var $result \Bootstrapper\ControlGroup */
+        /* @var $result Solbeg\VueValidation\\Bootstrapper\ControlGroup */
 
         if (($addVueClass === null && $this->getRequest()) || $addVueClass) {
             $jsErrorClass = $this->html->encodeJs(self::$controlGroupErrorClass);
             $jsInputName = $this->html->encodeJs($inputName);
             $jsScope = $this->html->encodeJs($this->getCurrentVueScope());
             $result->withAttributes([
-                'v-bind:class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsScope)}",
+                    'v-bind:class' => "{{$jsErrorClass}: errors.has($jsInputName, $jsScope)}",
             ]);
         }
 
@@ -420,8 +421,8 @@ class Form extends BaseForm
                 $requestClass = $request;
             } else {
                 $requestClass = is_object($request)
-                    ? get_class($request)
-                    : gettype($request);
+                        ? get_class($request)
+                        : gettype($request);
             }
             throw new \InvalidArgumentException("Invalid request type: '$requestClass', it must be an instance of " . FormRequest::class . '.');
         }
@@ -517,12 +518,12 @@ class Form extends BaseForm
     public function getRulesParser()
     {
         if ($this->rulesParser === null) {
-            /*
+            /**
              * In the laravel 5.4 'make' method no longer accepts a second array of parameters. The 'makeWith' method
-                allows functionality similar to old "make" functionality
-            */
+            allows functionality similar to old "make" functionality
+             */
             $this->rulesParser = $this->getContainer()->makeWith(RulesParser::class, [
-                'request' => $this->getRequest(),
+                    'request' => $this->getRequest(),
             ]);
         }
         return $this->rulesParser;

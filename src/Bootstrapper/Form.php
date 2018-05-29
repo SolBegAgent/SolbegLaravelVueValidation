@@ -3,7 +3,7 @@
  * Bootstrapper Form class
  */
 
-namespace Bootstrapper;
+namespace Solbeg\VueValidation\Bootstrapper;
 
 use Collective\Html\FormBuilder;
 

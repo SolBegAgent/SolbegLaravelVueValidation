@@ -3,7 +3,7 @@
  * Bootstrapper ControlGroup exceptions
  */
 
-namespace Bootstrapper;
+namespace Solbeg\VueValidation\Bootstrapper\Exceptions;
 
 use Exception;
 
