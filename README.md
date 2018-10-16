@@ -1,3 +1,5 @@
+*PACKAGE IS NOT MAINTAINED, USE AT YOUR OWN RISK*
+
 # SolbegLaravelVueValidation
 
 It is plugin for [Laravel](https://laravel.com/) applications
